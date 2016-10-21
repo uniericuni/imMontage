@@ -1,11 +1,15 @@
-function out = imMontage(imRef, folder, dup, wc)
+function out = imMontage(imRef, folder, dup, wc, wh)
 
     if ~exist('dup','var')
         dup = 4;
     end
-    if ~exist('w','var')
+    if ~exist('wc','var')
         wc = 0.5;
     end
+    if ~exist('wh','var')
+        wh = 0.5;
+    end
+    
     imRef = imresize(imRef,floor(sqrt(dup)));
     
     % read files
@@ -59,9 +63,9 @@ function out = imMontage(imRef, folder, dup, wc)
         for j=1:sW
             index = (i-1)*sW+j;
             fprintf(['block', num2str(index), '...\n']);
-            oBlock = imNRef(h*(i-1)+1:h*i, w*(j-1)+1:w*j,:);
-            block = imhistmatch(im{index}, oBlock);
-            block = uint8(block.*wc) + uint8(im{index}.*(1-wc));
+            refBlock = imNRef(h*(i-1)+1:h*i, w*(j-1)+1:w*j,:);
+            block = imhistmatch(im{index}, refBlock);
+            block = uint8(block.*wh) + uint8(im{index}.*(1-wh));
             out(h*(i-1)+1:h*i, w*(j-1)+1:w*j, :) = block;
         end
     end
@@ -70,6 +74,7 @@ function out = imMontage(imRef, folder, dup, wc)
     fprintf('image merging ...\n');
     out = imhistmatch(uint8(out),imNRef);
     out = uint8(out.*wc) + uint8(imNRef.*(1-wc));
-    out(edge(rgb2gray(imNRef),'canny')==true) = imNRef(edge(rgb2gray(imNRef),'canny')==true);
+    bRef = medfilt2(rgb2gray(imNRef), [3,3]*dup);
+    out(edge(bRef,'canny')==true) = imNRef(edge(bRef,'canny')==true);
     
 end

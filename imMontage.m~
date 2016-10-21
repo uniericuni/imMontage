@@ -1,11 +1,15 @@
-function out = imMontage(imRef, folder, dup, wc)
+function out = imMontage(imRef, folder, dup, wc, thresh)
 
     if ~exist('dup','var')
         dup = 4;
     end
-    if ~exist('w','var')
+    if ~exist('wc','var')
         wc = 0.5;
     end
+    if ~exist('thresh','var')
+        thresh = 500;
+    end
+    
     imRef = imresize(imRef,floor(sqrt(dup)));
     
     % read files
@@ -59,11 +63,11 @@ function out = imMontage(imRef, folder, dup, wc)
         for j=1:sW
             index = (i-1)*sW+j;
             fprintf(['block', num2str(index), '...\n']);
-            oBlock = imNRef(h*(i-1)+1:h*i, w*(j-1)+1:w*j,:);
-            block = imhistmatch(im{index}, oBlock);
-            for k=1:channel
-                
-            block = uint8(block.*wc) + uint8(im{index}.*(1-wc));
+            refBlock = imNRef(h*(i-1)+1:h*i, w*(j-1)+1:w*j,:);
+            block = imhistmatch(im{index}, refBlock);
+            for k = 1:chan
+            (sum(abs(block-refBlock),3) > thresh)
+            block = uint8(block.*wh) + uint8(im{index}.*(1-wh));
             out(h*(i-1)+1:h*i, w*(j-1)+1:w*j, :) = block;
         end
     end
