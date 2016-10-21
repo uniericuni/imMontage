@@ -70,5 +70,6 @@ function out = imMontage(imRef, folder, dup, wc)
     fprintf('image merging ...\n');
     out = imhistmatch(uint8(out),imNRef);
     out = uint8(out.*wc) + uint8(imNRef.*(1-wc));
+    out(edge(rgb2gray(imNRef),'canny')==true) = imNRef(edge(rgb2gray(imNRef),'canny')==true);
     
 end

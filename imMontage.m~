@@ -1,18 +1,16 @@
-function out = imMontage(imRefT, folder, dup, w)
+function out = imMontage(imRef, folder, dup, wc)
 
     if ~exist('dup','var')
         dup = 4;
     end
     if ~exist('w','var')
-        dup = 0.5;
+        wc = 0.5;
     end
+    imRef = imresize(imRef,floor(sqrt(dup)));
     
     % read files
     fprintf('read images ...\n');
-    [height,width,channel] = size(imRefT);
-    for i = 1:channel
-        imRef = imresize(imRefT(:,:,i), floor(sqrt(dup)));
-    
+    [height,width,channel] = size(imRef);
     files = dir([folder,'*.png']);
     N = length(files);
     for i=1:N
@@ -22,7 +20,7 @@ function out = imMontage(imRefT, folder, dup, w)
     end
     index = randperm(N*dup);
     for i=1:N*dup
-        im{i} = imT{mod(index(i),dup)+1};
+        im{i} = imT{mod(index(i),N)+1};
     end
     N = N*dup;
     [h,w,c] = size(im{1});
@@ -61,14 +59,19 @@ function out = imMontage(imRefT, folder, dup, w)
         for j=1:sW
             index = (i-1)*sW+j;
             fprintf(['block', num2str(index), '...\n']);
-            block = imhistmatch(im{index}, imNRef(h*(i-1)+1:h*i, w*(j-1)+1:w*j,:));
+            oBlock = imNRef(h*(i-1)+1:h*i, w*(j-1)+1:w*j,:);
+            block = imhistmatch(im{index}, oBlock);
+            for k=1:channel
+                
+            block = uint8(block.*wc) + uint8(im{index}.*(1-wc));
             out(h*(i-1)+1:h*i, w*(j-1)+1:w*j, :) = block;
         end
     end
     
     % merging
     fprintf('image merging ...\n');
-    out = double(out).*w + double(imRef).*(1-w);
-    out = uint8(out);
+    out = imhistmatch(uint8(out),imNRef);
+    out = uint8(out.*wc) + uint8(imNRef.*(1-wc));
+    out(edge(rgb2gray(imNRef),'canny')==true) = imNRef(edge(rgb2gray(imNRef),'canny')==true);
     
 end
